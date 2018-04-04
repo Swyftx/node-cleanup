@@ -39,8 +39,10 @@ function cleanup1(exitCode, signal) {
     return config.return1;
 }
 
-function cleanup2(exitCode, signal) {
+async function cleanup2(exitCode, signal) {
     process.stdout.write('cleanup2 ');
+    await new Promise(r => setTimeout(r, 1));
+    process.stdout.write('cleanup3 ');
     if (!config.return2)
         nodeCleanup.uninstall(); // don't cleanup again
     return config.return2;

@@ -53,17 +53,24 @@ var sigtermHandler;
 function signalHandler(signal)
 {
     var exit = true;
-    cleanupHandlers.forEach(function (cleanup) {
-        if (cleanup(null, signal) === false)
+    const finalize = () => {
+        if (exit) {
+            if (signal === 'SIGINT' && messages && messages.ctrl_C !== '')
+                process.stderr.write(messages.ctrl_C + "\n");
+            uninstall(); // don't cleanup again
+            // necessary to communicate the signal to the parent process
+            process.kill(process.pid, signal);
+        }
+    };
+    Promise.all(cleanupHandlers.map(async function (cleanup) {
+        if (await cleanup(null, signal) === false)
             exit = false;
+    })).then((res) => {
+        finalize();
+    }).catch((err) => {
+        process.stderr.write(err.stack);
+        finalize();
     });
-    if (exit) {
-        if (signal === 'SIGINT' && messages && messages.ctrl_C !== '')
-            process.stderr.write(messages.ctrl_C + "\n");
-        uninstall(); // don't cleanup again
-        // necessary to communicate the signal to the parent process
-        process.kill(process.pid, signal);
-    }
 }
 
 function exceptionHandler(e)
@@ -77,7 +84,9 @@ function exceptionHandler(e)
 function exitHandler(exitCode, signal)
 {
     cleanupHandlers.forEach(function (cleanup) {
-        cleanup(exitCode, signal);
+        if (cleanup(exitCode, signal) instanceof Promise) {
+            process.stderr.write('WARNING: async function may not run on normal exit!');
+        }
     });
 }
 

@@ -80,6 +80,21 @@ nodeCleanup(function (exitCode, signal) {
 });
 ```
 
+or using `AsyncFunction`, returning `Promise`:
+
+```js
+nodeCleanup(async function () {
+    synchronousCleanUp();
+    /*
+     part of doSomeCleanUp() and secondSynchronousCleanUp()
+     might not work on certain situations.
+     see "Reference > nodeCleanup()" below.
+     */
+    await doSomeCleanUp();
+    secondSynchronousCleanUp();
+});
+```
+
 When you hit *Ctrl-C*, you send a SIGINT signal to each process in the current process group. A process group is set of processes that are all supposed to end together as a group instead of persisting independently. However, some programs, such as Emacs, intercept and repurpose SIGINT so that it does not end the process. In such cases, SIGINT should not end any processes of the group. Here is how you can delegate the decision to terminate to a child process:
 
 ```js
@@ -107,8 +122,8 @@ nodeCleanup(function (exitCode, signal) {
 `nodeCleanup()` has the following available ([FlowType](https://flowtype.org/docs/getting-started.html#_)) signatures:
 
 ```
-function nodeCleanup(cleanupHandler: Function): void
-function nodeCleanup(cleanupHandler: Function, stderrMessages: object): void
+function nodeCleanup(cleanupHandler: Function|AsyncFunction): void
+function nodeCleanup(cleanupHandler: Function|AsyncFunction, stderrMessages: object): void
 function nodeCleanup(stderrMessages: object): void
 function nodeCleanup(): void
 ```
@@ -120,6 +135,8 @@ The 1st form installs a cleanup handler. The 2nd form also assigns messages to w
 `stderrMessages` is an object mapping any of the keys `ctrl_C` and `uncaughtException` to message strings that output to `stderr`. Set a message to the empty string `''` inhibit a previously-assigned message.
 
 `nodeCleanup()` may be called multiple times to install multiple cleanup handlers or override previous messages. Each handler gets called on each signal or termination condition. The most recently assigned messages apply.
+
+Important: Asynchronous cleanup will not work on `process.on('exit')` situation (see [here](https://nodejs.org/api/process.html#process_event_exit)).
 
 ### `nodeCleanup.uninstall()`
 

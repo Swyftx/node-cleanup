@@ -74,15 +74,19 @@ exports.test = function (t, config, action, expectedResults)
         t.equal(reason, expectedResults.exitReason, "exit reason");
         
         stdout = stdout.trim();
-        if (typeof expectedResults.stdout === 'string')
-            t.equal(stdout, expectedResults.stdout, "stdout");
-        else
-            t.match(stdout, expectedResults.stdout, "stdout");
-            
-        if (typeof expectedResults.stderr === 'string')
-            t.equal(stderr, expectedResults.stderr, "stderr");
-        else
-            t.match(stderr, expectedResults.stderr, "stderr");
+        (Array.isArray(expectedResults.stdout) ? expectedResults.stdout : [expectedResults.stdout]).forEach((rule) => {
+            if (typeof rule === 'string')
+                t.equal(stdout, rule, "stdout");
+            else
+                t.match(stdout, rule, "stdout");
+        });
+
+        (Array.isArray(expectedResults.stderr) ? expectedResults.stderr : [expectedResults.stderr]).forEach((rule) => {
+            if (typeof rule === 'string')
+                t.equal(stderr, rule, "stderr");
+            else
+                t.match(stderr, rule, "stderr");
+        });
         t.end();
     });
 };

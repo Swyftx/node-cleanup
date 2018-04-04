@@ -18,7 +18,7 @@ t.test("multiple handlers: normal exit", function (t) {
     }, {
         exitReason: 0,
         stdout: "cleanup1 cleanup2",
-        stderr: ""
+        stderr: "WARNING: async function may not run on normal exit!"
     });
 });
 
@@ -41,7 +41,7 @@ t.test("multiple handlers: uncaught exception - custom messages", function (t) {
     }, {
         exitReason: 1,
         stdout: "cleanup1 cleanup2",
-        stderr: /^Look! A surprise!/
+        stderr: [/^Look! A surprise!/, /async function may not run on normal exit/]
     });
 });
 
@@ -65,7 +65,7 @@ t.test("multiple handlers: uncaught exception - removed message",
         }, {
             exitReason: 1,
             stdout: "cleanup1 cleanup2",
-            stderr: /tests[\/\\]bin[\/\\]stackable.js/
+            stderr: [/tests[\/\\]bin[\/\\]stackable.js/, /async function may not run on normal exit/]
         });
     }
 );
@@ -90,7 +90,7 @@ t.test("multiple handlers: uncaught exception - added message",
         }, {
             exitReason: 1,
             stdout: "cleanup1 cleanup2",
-            stderr: /^Oops!/
+            stderr: [/^Oops!/, /async function may not run on normal exit/]
         });
     }
 );
@@ -110,7 +110,7 @@ t.test("multiple handlers: uncaught exception - no message", function (t) {
     }, {
         exitReason: 1,
         stdout: "cleanup1 cleanup2",
-        stderr: /tests[\/\\]bin[\/\\]stackable.js/
+        stderr: [/tests[\/\\]bin[\/\\]stackable.js/, /async function may not run on normal exit/]
     });
 });
 
@@ -133,7 +133,7 @@ t.test("multiple handlers: child SIGINT - both heeded, custom messages",
             process.kill(childPID, 'SIGINT');
         }, {
             exitReason: 'SIGINT',
-            stdout: "cleanup1 cleanup2",
+            stdout: "cleanup1 cleanup2 cleanup3",
             stderr: "{^C2}\n"
         });
     }
@@ -158,7 +158,7 @@ t.test("multiple handlers: child SIGINT - first heeded, custom messages",
             process.kill(childPID, 'SIGINT');
         }, {
             exitReason: 0,
-            stdout: "cleanup1 cleanup2",
+            stdout: "cleanup1 cleanup2 cleanup3",
             stderr: ""
         });
     }
@@ -183,7 +183,7 @@ t.test("multiple handlers: child SIGINT - second heeded, custom messages",
             process.kill(childPID, 'SIGINT');
         }, {
             exitReason: 0,
-            stdout: "cleanup1 cleanup2",
+            stdout: "cleanup1 cleanup2 cleanup3",
             stderr: ""
         });
     }
@@ -207,7 +207,7 @@ t.test("multiple handlers: child SIGINT - removed message", function (t) {
         process.kill(childPID, 'SIGINT');
     }, {
         exitReason: 'SIGINT',
-        stdout: "cleanup1 cleanup2",
+        stdout: "cleanup1 cleanup2 cleanup3",
         stderr: ""
     });
 });
@@ -230,7 +230,7 @@ t.test("multiple handlers: child SIGINT - added message", function (t) {
         process.kill(childPID, 'SIGINT');
     }, {
         exitReason: 'SIGINT',
-        stdout: "cleanup1 cleanup2",
+        stdout: "cleanup1 cleanup2 cleanup3",
         stderr: "{^C1}\n"
     });
 });
@@ -249,7 +249,7 @@ t.test("multiple handlers: child SIGQUIT", function (t) {
         process.kill(childPID, 'SIGQUIT');
     }, {
         exitReason: 'SIGQUIT',
-        stdout: "cleanup1 cleanup2",
+        stdout: "cleanup1 cleanup2 cleanup3",
         stderr: ""
     });
 });
@@ -268,7 +268,7 @@ t.test("multiple handlers: child SIGTERM", function (t) {
         process.kill(childPID, 'SIGTERM');
     }, {
         exitReason: 'SIGTERM',
-        stdout: "cleanup1 cleanup2",
+        stdout: "cleanup1 cleanup2 cleanup3",
         stderr: ""
     });
 });
