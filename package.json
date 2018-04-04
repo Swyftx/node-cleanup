@@ -1,6 +1,6 @@
 {
-  "name": "node-cleanup",
-  "version": "2.1.2",
+  "name": "@earny/node-cleanup",
+  "version": "2.1.2-ey1",
   "description": "installs custom cleanup handlers that run on exiting node",
   "main": "node-cleanup.js",
   "scripts": {
