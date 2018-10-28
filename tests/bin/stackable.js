@@ -22,56 +22,47 @@ The process writes behavioral results to stdout for comparison with expectations
 The process also writes to stderr for comparison with expectations.
 ******************************************************************************/
 
-//// MODULES //////////////////////////////////////////////////////////////////
+/// / MODULES //////////////////////////////////////////////////////////////////
 
-var nodeCleanup = require('../../');
+var nodeCleanup = require('../../')
 
-//// CONFIGURATION ////////////////////////////////////////////////////////////
+/// / CONFIGURATION ////////////////////////////////////////////////////////////
 
-var config = JSON.parse(process.argv[2]);
+var config = JSON.parse(process.argv[2])
 
-//// CLEANUP HANDLERS /////////////////////////////////////////////////////////
+/// / CLEANUP HANDLERS /////////////////////////////////////////////////////////
 
-function cleanup1(exitCode, signal) {
-    process.stdout.write('cleanup1 ');
-    if (!config.return1)
-        nodeCleanup.uninstall(); // don't cleanup again
-    return config.return1;
+function cleanup1 (exitCode, signal) {
+  process.stdout.write('cleanup1 ')
+  if (!config.return1) { nodeCleanup.uninstall() } // don't cleanup again
+  return config.return1
 }
 
-async function cleanup2(exitCode, signal) {
-    process.stdout.write('cleanup2 ');
-    await new Promise(r => setTimeout(r, 1));
-    process.stdout.write('cleanup3 ');
-    if (!config.return2)
-        nodeCleanup.uninstall(); // don't cleanup again
-    return config.return2;
+async function cleanup2 (exitCode, signal) {
+  process.stdout.write('cleanup2 ')
+  await new Promise(resolve => setTimeout(undefined, 1))
+  process.stdout.write('cleanup3 ')
+  if (!config.return2) { nodeCleanup.uninstall() } // don't cleanup again
+  return config.return2
 }
 
-//// MAIN /////////////////////////////////////////////////////////////////////
+/// / MAIN /////////////////////////////////////////////////////////////////////
 
 if (config.handlers === 0) {
-    if (config.messages0)
-        nodeCleanup(config.messages0);
-    else
-        nodeCleanup();
-}
-else {
-    nodeCleanup(cleanup1, config.messages1);
-    if (config.handlers > 1)
-        nodeCleanup(cleanup2, config.messages2);
+  if (config.messages0) { nodeCleanup(config.messages0) } else { nodeCleanup() }
+} else {
+  nodeCleanup(cleanup1, config.messages1)
+  if (config.handlers > 1) { nodeCleanup(cleanup2, config.messages2) }
 }
 
-if (config.uninstall)
-    nodeCleanup.uninstall();
+if (config.uninstall) { nodeCleanup.uninstall() }
 
 setTimeout(function () {
-    // disconnect IPC so can exit when stdout, stderr,
-    // child processes, and other resources complete.
-    process.disconnect();
-    if (config.exception)
-        throw new Error("unexpected exception");
-    process.exit(0);
-}, config.maxDuration);
+  // disconnect IPC so can exit when stdout, stderr,
+  // child processes, and other resources complete.
+  process.disconnect()
+  if (config.exception) { throw new Error('unexpected exception') }
+  process.exit(0)
+}, config.maxDuration)
 
-process.send('ready');
+process.send('ready')

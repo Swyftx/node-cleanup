@@ -29,64 +29,58 @@ The process writes behavioral results to stdout for comparison with expectations
 The process also writes to stderr for comparison with expectations.
 ******************************************************************************/
 
-//// MODULES //////////////////////////////////////////////////////////////////
+/// / MODULES //////////////////////////////////////////////////////////////////
 
-var path = require('path');
-var fork = require('child_process').fork;
-var nodeCleanup = require('../../');
+var path = require('path')
+var fork = require('child_process').fork
+var nodeCleanup = require('../../')
 
-//// CONFIGURATION ////////////////////////////////////////////////////////////
+/// / CONFIGURATION ////////////////////////////////////////////////////////////
 
-var config = JSON.parse(process.argv[2]);
-var grandchildFile = path.resolve(__dirname, "./grandchild.js");
-var grandchildMaxDuration = Math.round(config.maxDuration*0.5);
+var config = JSON.parse(process.argv[2])
+var grandchildFile = path.resolve(__dirname, './grandchild.js')
+var grandchildMaxDuration = Math.round(config.maxDuration * 0.5)
 
-//// STATE ////////////////////////////////////////////////////////////////////
+/// / STATE ////////////////////////////////////////////////////////////////////
 
-var grandchild = null;
+var grandchild = null
 
-//// MAIN /////////////////////////////////////////////////////////////////////
+/// / MAIN /////////////////////////////////////////////////////////////////////
 
 nodeCleanup(function (exitCode, signal) {
-    var reason = (exitCode !== null ? exitCode : signal);
-    if (grandchild !== null && reason === 'SIGINT') {
-        process.stdout.write('skipped_cleanup ');
-        return false;
-    }
-    process.stdout.write('cleanup ');
-    if (config.skipTermination) {
-        nodeCleanup.uninstall(); // don't cleanup again
-        return false;
-    }
-    if (config.exitReturn === 'true')
-        return true;
-}, config.messages);
+  var reason = (exitCode !== null ? exitCode : signal)
+  if (grandchild !== null && reason === 'SIGINT') {
+    process.stdout.write('skipped_cleanup ')
+    return false
+  }
+  process.stdout.write('cleanup ')
+  if (config.skipTermination) {
+    nodeCleanup.uninstall() // don't cleanup again
+    return false
+  }
+  if (config.exitReturn === 'true') { return true }
+}, config.messages)
 
 setTimeout(function () {
-    // disconnect IPC so can exit when stdout, stderr,
-    // child processes, and other resources complete.
-    process.disconnect();
-    if (config.exception)
-        throw new Error("unexpected exception");
-    process.exit(0);
-}, config.maxDuration);
+  // disconnect IPC so can exit when stdout, stderr,
+  // child processes, and other resources complete.
+  process.disconnect()
+  if (config.exception) { throw new Error('unexpected exception') }
+  process.exit(0)
+}, config.maxDuration)
 
 if (config.grandchild) {
-    grandchild = fork(grandchildFile, [
-        config.grandchildHeedsSIGINT,
-        grandchildMaxDuration
-    ]);
-    grandchild.on('message', function (msg) {
-        if (msg === 'ready')
-            process.send('ready');
-    });
-    grandchild.on('exit', function (exitCode, signal) {
-        grandchild = null; // allow process to heed forthcoming SIGINT
-        process.stdout.write('grandchild='+
-                (exitCode !== null ? exitCode : signal) +' ');
-        if (signal === 'SIGINT')
-            process.kill(process.pid, signal);
-    });
-}
-else
-    process.send('ready');
+  grandchild = fork(grandchildFile, [
+    config.grandchildHeedsSIGINT,
+    grandchildMaxDuration
+  ])
+  grandchild.on('message', function (msg) {
+    if (msg === 'ready') { process.send('ready') }
+  })
+  grandchild.on('exit', function (exitCode, signal) {
+    grandchild = null // allow process to heed forthcoming SIGINT
+    process.stdout.write('grandchild=' +
+                (exitCode !== null ? exitCode : signal) + ' ')
+    if (signal === 'SIGINT') { process.kill(process.pid, signal) }
+  })
+} else { process.send('ready') }

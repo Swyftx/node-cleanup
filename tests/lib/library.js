@@ -2,32 +2,32 @@
 Library of functions for running child processes.
 ******************************************************************************/
 
-//// MODULES //////////////////////////////////////////////////////////////////
+/// / MODULES //////////////////////////////////////////////////////////////////
 
-var MemoryStream = require('memory-streams').WritableStream;
-var path = require('path');
-var spawn = require('child_process').spawn;
+var MemoryStream = require('memory-streams').WritableStream
+var path = require('path')
+var spawn = require('child_process').spawn
 
-//// PUBLIC CONSTANTS /////////////////////////////////////////////////////////
+/// / PUBLIC CONSTANTS /////////////////////////////////////////////////////////
 
-exports.DEFAULT_SIGINT_OUT = "[ctrl-C]\n";
-exports.DEFAULT_EXCEPTION_OUT = /^Uncaught exception\.\.\./;
+exports.DEFAULT_SIGINT_OUT = '[ctrl-C]\n'
+exports.DEFAULT_EXCEPTION_OUT = /^Uncaught exception\.\.\./
 
-//// PRIVATE CONSTANTS ////////////////////////////////////////////////////////
+/// / PRIVATE CONSTANTS ////////////////////////////////////////////////////////
 
-var MAX_DURATION = 250; // max duration of child process in millisecs
+var MAX_DURATION = 250 // max duration of child process in millisecs
 
-var childEnv = {};
+var childEnv = {}
 Object.keys(process.env).forEach(function (key) {
-    childEnv[key] = process.env[key];
-});
+  childEnv[key] = process.env[key]
+})
 var childOptions = {
-    env: childEnv,
-    stdio: ['inherit', 'pipe', 'pipe', 'ipc'],
-    detached: true
-};
+  env: childEnv,
+  stdio: ['inherit', 'pipe', 'pipe', 'ipc'],
+  detached: true
+}
 
-//// FUNCTIONS ////////////////////////////////////////////////////////////////
+/// / FUNCTIONS ////////////////////////////////////////////////////////////////
 
 /**
  * Launch a child process that uses nodeCleanup(), performing an action once the child is running, and provide the results of the run when the child exits. The child runs in a new process group, separate from the test process, so that the caller may signal the group as a whole.
@@ -37,27 +37,25 @@ var childOptions = {
  * @param done A callback function(reason, stdoutString, stderrString) providing the output of the child. This callback should test this output against expectations. reason is the exit code, unless the process was terminated by a signal, in which case it is the string name of the signal.
  */
 
-exports.launch = function (config, action, done)
-{
-    config.maxDuration = MAX_DURATION;
-    var childPath = path.resolve(__dirname, "../bin/"+ config.child +".js");
-    var childArgs = [ childPath, JSON.stringify(config) ];
-    var child = spawn(process.execPath, childArgs, childOptions);
-    var stdoutStream = new MemoryStream();
-    var stderrStream = new MemoryStream();
-    child.stdout.pipe(stdoutStream);
-    child.stderr.pipe(stderrStream);
-        
-    child.on('message', function (msg) {
-        if (msg === 'ready')
-            action(child.pid);
-    });
-    
-    child.on('exit', function (exitCode, signal) {
-        done((exitCode !== null ? exitCode : signal),
-                stdoutStream.toString(), stderrStream.toString());
-    });
-};
+exports.launch = function (config, action, done) {
+  config.maxDuration = MAX_DURATION
+  var childPath = path.resolve(__dirname, '../bin/' + config.child + '.js')
+  var childArgs = [ childPath, JSON.stringify(config) ]
+  var child = spawn(process.execPath, childArgs, childOptions)
+  var stdoutStream = new MemoryStream()
+  var stderrStream = new MemoryStream()
+  child.stdout.pipe(stdoutStream)
+  child.stderr.pipe(stderrStream)
+
+  child.on('message', function (msg) {
+    if (msg === 'ready') { action(child.pid) }
+  })
+
+  child.on('exit', function (exitCode, signal) {
+    done((exitCode !== null ? exitCode : signal),
+      stdoutStream.toString(), stderrStream.toString())
+  })
+}
 
 /**
  * Shorthand function for launching a process, optionally sending a signal to it, and testing the resulting output. It calls t.equal() or t.match() on each of the expected results, depending on whether it is a string or a regular expression, and then t.end() to complete the test.
@@ -68,25 +66,18 @@ exports.launch = function (config, action, done)
  * @param expectedResults A structure of the form {exitCode, stdout, stderr} containing the expected output of the test. exitCode is an integer. stdout and stderr are strings or regular expressions. stdout is compared against the result trimmed of preceding and trailing whitespace. When stdout or stderr is a string, it is tested for being identical with the actual result.
  */
 
-exports.test = function (t, config, action, expectedResults)
-{
-    exports.launch(config, action, function (reason, stdout, stderr) {
-        t.equal(reason, expectedResults.exitReason, "exit reason");
-        
-        stdout = stdout.trim();
-        (Array.isArray(expectedResults.stdout) ? expectedResults.stdout : [expectedResults.stdout]).forEach((rule) => {
-            if (typeof rule === 'string')
-                t.equal(stdout, rule, "stdout");
-            else
-                t.match(stdout, rule, "stdout");
-        });
+exports.test = function (t, config, action, expectedResults) {
+  exports.launch(config, action, function (reason, stdout, stderr) {
+    t.equal(reason, expectedResults.exitReason, 'exit reason')
 
-        (Array.isArray(expectedResults.stderr) ? expectedResults.stderr : [expectedResults.stderr]).forEach((rule) => {
-            if (typeof rule === 'string')
-                t.equal(stderr, rule, "stderr");
-            else
-                t.match(stderr, rule, "stderr");
-        });
-        t.end();
+    stdout = stdout.trim();
+    (Array.isArray(expectedResults.stdout) ? expectedResults.stdout : [expectedResults.stdout]).forEach((rule) => {
+      if (typeof rule === 'string') { t.equal(stdout, rule, 'stdout') } else { t.match(stdout, rule, 'stdout') }
     });
-};
+
+    (Array.isArray(expectedResults.stderr) ? expectedResults.stderr : [expectedResults.stderr]).forEach((rule) => {
+      if (typeof rule === 'string') { t.equal(stderr, rule, 'stderr') } else { t.match(stderr, rule, 'stderr') }
+    })
+    t.end()
+  })
+}
