@@ -1,5 +1,5 @@
 {
-  "name": "@earny/node-cleanup",
+  "name": "@swyftx/node-cleanup",
   "version": "2.1.2-ey1",
   "description": "installs custom cleanup handlers that run on exiting node",
   "main": "node-cleanup.js",
@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jtlapp/node-cleanup.git"
+    "url": "git+https://github.com/swyftx/node-cleanup.git"
   },
   "keywords": [
     "node",
@@ -27,12 +27,16 @@
       "name": "Joseph T. Lapp",
       "email": "arachnojoe@gmail.com",
       "url": "http://josephtlapp.com"
+    },
+    {
+      "name": "Earny",
+      "url": "https://github.com/Earny"
     }
   ],
   "bugs": {
-    "url": "https://github.com/jtlapp/node-cleanup/issues"
+    "url": "https://github.com/swyftx/node-cleanup/issues"
   },
-  "homepage": "https://github.com/jtlapp/node-cleanup#readme",
+  "homepage": "https://github.com/swyftx/node-cleanup#readme",
   "license": "MIT",
   "devDependencies": {
     "memory-streams": "^0.1.0",
